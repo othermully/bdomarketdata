@@ -1,41 +1,29 @@
-import requests
-import datetime
+import json
+import pandas as pd
+
+file_path = "./output.json"
 
 def main():
-    process_item_history()
-    
-def get_item_price_history():
-    url = 'https://api.arsha.io/v2/na/GetMarketPriceInfo?id=10007&sid=0&lang=en'    
-    response = requests.get(url=url)
-    return response.json()
+    parse_data()
 
-def get_item_market_trades():
-    url = 'https://api.arsha.io/v2/na/GetWorldMarketSearchList?ids=10007&lang=en'
-    response = requests.get(url=url)
-    return response.json()
+def read_file(path):
+    with open(path, 'r') as file:
+        data = json.load(file)
+    return data
 
-def process_item_history():
-    data = get_item_price_history()
-    data = data["history"]
+def parse_data():
+    data_dict = {}
+    data_dict_list = []
+    data = read_file(file_path)
+    for single_item_list in data["data"]:
+        data_dict["date"] = single_item_list[0]
+        data_dict["price"] = single_item_list[1]
+        data_dict["stock"] = single_item_list[2]
+        data_dict["volume"] = single_item_list[3]
+        data_dict_list.append(data_dict) 
+    return data_dict_list
 
-    price_history_dict = {}
-    price_history_list = []
+def create_dataframe():
+    pass
 
-    for timestamp, price in data.items():
-        seconds = int(timestamp) / 1000
-        dt = datetime.datetime.fromtimestamp(seconds)
-        #print(f"{dt.strftime('%Y-%m-%d')}, Price: {price}")
-        price_history_dict[dt.strftime('%Y-%m-%d')] = price
-
-    for date, price in price_history_dict.items():
-        price_history_list.append({date, price})
-
-    return price_history_list
-
-def process_item_trades():
-    data = get_item_market_trades()
-    total_trades = data["totalTrades"]
-    return total_trades
-
-if __name__ == "__main__":
-    main()
+main()
